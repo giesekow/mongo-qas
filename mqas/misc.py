@@ -18,7 +18,6 @@ def parse_time(time_str):
 
     return timedelta(**time_params)
 
-
 def parse_time_to_seconds(time_str):
     if isinstance(time_str, int) or isinstance(time_str, float):
       return int(time_str)
