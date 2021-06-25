@@ -1,7 +1,11 @@
-build
-dist
-*.egg-info
+python/build
+python/dist
+python/*.egg-info
 .vscode
 **/__pycache__
 __pycache__
 */__pycache__
+node/node_modules
+node/lib
+node/test
+
