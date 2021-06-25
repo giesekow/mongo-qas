@@ -1,0 +1,54 @@
+{
+  "name": "mongo-qas",
+  "version": "0.0.1",
+  "description": "A job queuing and scheduling library based on mongodb",
+  "main": "./lib/bin/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/giesekow/mongo-qas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/giesekow/mongo-qas/issues"
+  },
+  "homepage": "https://github.com/giesekow/mongo-qas#readme",
+  "scripts": {
+    "test": "node test/index.js",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "mqas": "node lib/bin/index.js worker -m test"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "bin": {
+    "node-mqas": "./lib/bin/index.js"
+  },
+  "author": "Giles Tetteh",
+  "license": "ISC",
+  "keywords": [
+    "mongo",
+    "queue",
+    "schedule",
+    "rq",
+    "mongo-qas",
+    "mqas",
+    "worker"
+  ],
+  "devDependencies": {
+    "@types/app-module-path": "^2.2.0",
+    "@types/argparse": "^2.0.8",
+    "@types/mongodb": "^3.6.18",
+    "@types/yaml": "^1.9.7",
+    "prettier": "^2.3.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "argparse": "^1.0.10",
+    "mongodb": "^3.6.9",
+    "yaml": "^1.10.2"
+  }
+}
