@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mongo-qas-dashboard
-Version: 0.1.14
+Version: 0.1.15
 Summary: A Dashboard for the mongo-qas library
 Home-page: https://github.com/giesekow/mongo-qas
 Author: Giles Tetteh

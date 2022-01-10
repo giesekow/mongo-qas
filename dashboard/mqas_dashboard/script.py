@@ -23,4 +23,4 @@ def main():
       os.environ[k] = env[k]
 
   app = create_app()
-  app.run(debug=args.debug_mode, use_reloader=False)
+  app.run(debug=args.debug_mode, use_reloader=False, host="0.0.0.0")
