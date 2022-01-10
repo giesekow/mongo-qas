@@ -42,7 +42,10 @@ def parse_args():
   worker.add_argument('-l', '--lang', dest='lang', type=str, default="python",  help='worker language (default: python)')
   worker.add_argument('-m', '--modules', dest='modules', action="append", type=str, default=[], help='additional python module paths')
   worker.add_argument('-b', '--heartbeat', dest='heartbeat', type=int, default=1,  help='worker heart beat in seconds (default: 1)')
-  
+  worker.add_argument('--logger', dest='logger', type=str, default=None,  help='logger callback function (default: None)')
+  worker.add_argument('--log-file', dest='log_file', type=str, default=None,  help='path to log file (default: None)')
+  worker.add_argument('--verbosity', dest='verbosity', type=str, default="error",  help='logger verbosity, options are [error, completed, progress] (default: error)')
+  worker.add_argument('-e', '--executable', dest='executables', action=UpdateAction, type=dict_load, default={},  help='python executable paths for running job based on channels.')
 
   queue = subparsers.add_parser('queue', description='Schedule a job into the job queue')
   queue.add_argument('function_name', metavar='function_name', type=str, help='the full name of the entry point function')
@@ -66,6 +69,12 @@ def parse_args():
   queue.add_argument('--on-failure', dest='on_failure', type=str, default=None,  help='function to be invoked on failure of the job')
   queue.add_argument('--max-attempts', dest='max_attempts', type=int, default=None,  help='maximum number of times to attempt executing job in case of failure')
 
+  initialize = subparsers.add_parser('init', description='Prepares database for job scheduling and worker')
+  initialize.add_argument('-u', '--conn', dest='db_conn', type=str, default="mongodb://localhost:27017",  help='mongodb connection string (default: mongodb://localhost:27017)')
+  initialize.add_argument('--dbname', dest='db_name', type=str, default="jobs",  help='mongodb database name (default: jobs)')
+  initialize.add_argument('--colname', dest='col_name', type=str, default="jobs",  help='mongodb collection name (default: jobs)')
+
+
   args = parser.parse_args()
 
   return args
@@ -78,6 +87,8 @@ def main():
     run_worker(args)
   elif str(action).lower() == "queue":
     run_queue(args)
+  elif str(action).lower() == "init":
+    run_init(args)
 
 def run_worker(args):
   from pymongo import MongoClient
@@ -107,7 +118,9 @@ def run_worker(args):
     for module in args.modules:
       sys.path.append(os.path.abspath(module))
 
-    worker = Worker(queues, heart_beat=args.heartbeat)
+    modulePaths = [os.path.abspath(module) for module in args.modules]
+
+    worker = Worker(queues, heart_beat=args.heartbeat, logger=args.logger, verbosity=args.verbosity, executables=args.executables, logFile=args.log_file, modulePaths=modulePaths)
     if (channels is None) or len(channels) == 0:
       print(f"**Started worker with heart beat of {args.heartbeat} second(s)", flush=True)
     else:
@@ -140,3 +153,11 @@ def run_queue(args):
   jobId = queue.enqueue(args.function_name, **params)
   print(f"Job Successfully queued, {jobId}")
   return jobId
+
+def run_init(args):
+  from pymongo import MongoClient
+  client = MongoClient(args.db_conn)
+  db = client.get_database(args.db_name)
+  coll = db.get_collection(args.col_name)
+  coll.create_index("expireAt", expireAfterSeconds=0)
+  

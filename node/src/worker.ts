@@ -6,6 +6,8 @@ export interface WorkerOptions {
   channel?: string|string[]
   heartBeat?: number
   verbose?: boolean
+  verbosity?: string
+  logger?: string|Function
 }
 
 export class Worker {
@@ -16,6 +18,8 @@ export class Worker {
   private running: boolean = false
   private job?: Job|undefined
   private verbose: boolean = false
+  private logger: any
+  private verbosity: string = 'error'
 
   constructor(queues: Queue|Queue[], options?: WorkerOptions) {
     this.queues = Array.isArray(queues) ? queues : [queues]
@@ -24,6 +28,28 @@ export class Worker {
       this.channels = Array.isArray(options.channel) ? options.channel : [options.channel];
     }
     if (options?.verbose) this.verbose = options.verbose;
+    if (options?.verbosity) this.setVerbosity(options.verbosity);
+    if (options?.logger) this.setLogger(options.logger)
+  }
+
+  setLogger(logger:string|Function) {
+    const callback: any = logger;
+    if (callback.call) this.logger = callback;
+    else if (typeof callback === "string") {
+      const cparts: string[] = callback.toString().split(".");
+      if (cparts.length > 1) {
+        const modName = cparts[0];
+        const mod: any = require(modName);
+        const func: Function|undefined = cparts.slice(1).reduce((m: any , n: any) => { return m ? m[n] : m }, mod);
+        if (func && func.call) {
+          this.logger = func
+        }
+      }
+    }
+  }
+
+  setVerbosity(verbosity: string) {
+    this.verbosity = verbosity;
   }
 
   async start() {
@@ -64,12 +90,14 @@ export class Worker {
   }
 
   private async runJob(job: Job) {
-    const payload = job.payload
+    const payload = job.payload;
+    job.setVerbosity(this.verbosity);
+    job.setLogger(this.logger);
     try {
       if (payload) {
         const callback = payload["function_name"];
         if (callback) {
-          const cparts: string[] = callback.toString().split(".")
+          const cparts: string[] = callback.toString().split(".");
           if (cparts.length > 1) {
             const modName = cparts[0];
             const mod: any = require(modName);
@@ -77,9 +105,9 @@ export class Worker {
             if (func && func.call) {
               const args: any[] = payload.args || [];
               const kwargs: any = payload.kwargs || null;
-              if (kwargs) args.push(kwargs)
-              const result  = await func.call(func, ...args)
-              job.complete(result)
+              if (kwargs) args.push(kwargs);
+              const result  = await func.call(func, ...args);
+              job.complete(result);
             }
           } else {
             job.error(`Unable to find function ${callback}`)

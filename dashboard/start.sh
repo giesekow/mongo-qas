@@ -1,0 +1,3 @@
+export FLASK_APP=mqas_dashboard
+export FLASK_ENV=development
+flask run

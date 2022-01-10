@@ -1,0 +1,3 @@
+[console_scripts]
+mqas-dashboard = mqas_dashboard:main
+

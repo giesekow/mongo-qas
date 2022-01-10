@@ -4,12 +4,12 @@ from pymongo.database import Database
 from pymongo import MongoClient
 from pymongo.results import InsertOneResult
 from typing import Union, Callable, Optional, Type
-from datetime import datetime
+from datetime import datetime, timedelta
 from .job import Job
 from .misc import parse_time_to_seconds, toOid
 
 class Queue:
-  def __init__(self, connection: Union[str, Type[Collection], Type[Database], Type[MongoClient]], consumerId: str = "default-customer-id", lang: str = "python", channel: str = "default", priority: int = 0, job_timeout: Union[str, int, None]='1h', result_ttl: Union[str,int,None]=500, ttl: Union[str,int,None]=None, failure_ttl: Union[str,int]='1y', max_attempts: int=1, db_name: Optional[str]="jobs", col_name: Optional[str]="jobs") -> None:
+  def __init__(self, connection: Union[str, Type[Collection], Type[Database], Type[MongoClient]], consumerId: str = "default-customer-id", lang: str = "python", channel: str = "default", priority: int = 0, job_timeout: Union[str, int, None]='1h', result_ttl: Union[str,int,None]=3600, ttl: Union[str,int,None]=None, failure_ttl: Union[str,int]='1w', max_attempts: int=1, db_name: Optional[str]="jobs", col_name: Optional[str]="jobs") -> None:
     
     if isinstance(connection, MongoClient):
       db = connection[db_name]
@@ -30,7 +30,7 @@ class Queue:
     self.max_attempts = max_attempts
     self.channel = channel
     self.result_ttl = parse_time_to_seconds(result_ttl) if not result_ttl is None else result_ttl
-    self.ttl = ttl = parse_time_to_seconds(ttl) if not ttl is None else ttl
+    self.ttl = parse_time_to_seconds(ttl) if not ttl is None else ttl
     self.failure_ttl = parse_time_to_seconds(failure_ttl) if not failure_ttl is None else failure_ttl
     self.priority = priority
 
@@ -91,7 +91,7 @@ class Queue:
       for i in range(len(depends_on)):
         depends_on[i] = toOid(depends_on[i])
     elif not depends_on is None:
-      depends_on = toOid(depends_on)
+      depends_on = [toOid(depends_on)]
 
     data = {
       "data": {
@@ -117,8 +117,12 @@ class Queue:
       "progress": 0,
       "priority": priority,
       "lang": lang,
-      "createdAt": datetime.utcnow()
+      "createdAt": datetime.utcnow(),
     }
+
+    if not (ttl is None):
+      if int(ttl) > 0:
+        data["expireAt"] = datetime.utcnow() + timedelta(seconds=int(ttl))
 
     if not job_id is None:
       data["_id"] = toOid(job_id)
@@ -149,7 +153,7 @@ class Queue:
     job = self.collection.find_one_and_update(query, {"$set": {"inProgress": True, "startedAt": datetime.utcnow()}}, sort=[("priority", DESCENDING), ("createdAt", ASCENDING)])
 
     if not job is None:
-      keys = ["depends_on", "result_ttl", "failure_ttl", "ttl", "createdAt", "lang"]
+      keys = ["depends_on", "result_ttl", "failure_ttl", "ttl", "createdAt", "lang", "channel"]
       kwargs = {}
       for k in keys:
         if k in job:

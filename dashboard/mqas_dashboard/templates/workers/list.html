@@ -1,0 +1,22 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Workers{% endblock %}</h1>
+{% endblock %} {% block content %}
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>ID</th>
+      <th>Status</th>
+      <th>Completed Jobs</th>
+      <th>Failed Jobs</th>
+    </tr>
+  </thead>
+  {% for worker in workers %}
+  <tr>
+    <td><a href="{{url_for('workers.item', workerid=worker.get('_id'))}}" class="w3-text-blue">{{worker.get("_id")}}</a></td>
+    <td>{{worker.get("status")}}</td>
+    <td>{{worker.get("jobs_completed")}}</td>
+    <td>{{worker.get("jobs_failed")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

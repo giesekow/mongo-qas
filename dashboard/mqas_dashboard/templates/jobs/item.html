@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Job Details{% endblock %}</h1>
+{% endblock %} {% block content %}
+<a href="{{ url_for('jobs.items') }}" class="float w3-btn w3-black">BACK</a>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in attributes %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% if has_errors %}
+<br/>
+<h3 class="w3-margin-top">Error Info.</h3>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-red">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in errors %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %} {% if has_results %}
+<br/>
+<h3 class="w3-margin-top">Results</h3>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-green">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in results %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %} {% if has_args %}
+<br/>
+<h3 class="w3-margin-top">Args</h3>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in args %}
+  <tr>
+    <td>{{att}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %} {% if has_kwargs %}
+<br/>
+<h3 class="w3-margin-top">Kwargs</h3>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in kwargs %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %} {% endblock %}

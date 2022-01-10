@@ -1,0 +1,38 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Worker Information{% endblock %}</h1>
+{% endblock %} {% block content %}
+<a href="{{ url_for('workers.items') }}" class="float w3-btn w3-black">BACK</a>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in attributes %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% if has_errors %}
+<br>
+<h3>Last Error Information</h3>
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-red">
+      <th>Attribute</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  {% for att in errors %}
+  <tr>
+    <td>{{att.get("text")}}</a>
+    </td>
+    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %} {% endblock %}

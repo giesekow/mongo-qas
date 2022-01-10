@@ -1,0 +1,24 @@
+<!doctype html>
+
+<head>
+  <title>{% block title %}{% endblock %} - MQAS Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/w3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+
+<body>
+  <div class="w3-container">
+    <div class="w3-bar w3-light-grey w3-border w3-margin-top">
+      <a href="" class="w3-bar-item w3-button w3-blue"><i class="fa fa-home"></i></a>
+      <a href="{{ url_for('jobs.items') }}" class="w3-bar-item w3-button w3-right"><i class="fa fa-rocket w3-margin-right"></i>jobs</a>
+      <a href="{{ url_for('workers.items') }}" class="w3-bar-item w3-button w3-right"><i class="fa fa-briefcase w3-margin-right"></i>workers</a>
+    </div>
+    <header>
+      {% block header %}{% endblock %}
+    </header>
+    {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+    {% endfor %} {% block content %}{% endblock %}
+  </div>
+</body>

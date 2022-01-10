@@ -1,0 +1,115 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Jobs{% endblock %}</h1>
+{% endblock %} {% block content %}
+<form method="post">
+  <div class="w3-cell-row w3-margin-bottom">
+    <div class="w3-container w3-cell">
+      <p>Search Text</p>
+      <input class="w3-input w3-border" value="{{ options['txt'] }}" name="searchText" />
+    </div>
+    <div class="w3-container w3-cell">
+      <p>Statuses</p>
+      <select class="w3-select" name="status">
+        <option value="all" {{ "selected" if options["status"] == "all" else "" }}>[ALL]</option>
+        <option value="pending" {{ "selected" if options["status"] == "pending" else "" }}>pending</option>
+        <option value="in-progress" {{ "selected" if options["status"] == "in-progress" else "" }}>in progress</option>
+        <option value="error" {{ "selected" if options["status"] == "error" else "" }}>failed</option>
+        <option value="done" {{ "selected" if options["status"] == "done" else "" }}>completed</option>
+      </select>
+    </div>
+    <div class="w3-container w3-cell">
+      <p>Languages</p>
+      <select class="w3-select" name="language">
+        <option value="all" {{ "selected" if options["lang"] == "all" else "" }}>[ALL]</option>
+        <option value="python" {{ "selected" if options["lang"] == "python" else "" }} >Python</option>
+        <option value="node" {{ "selected" if options["lang"] == "node" else "" }}>Node</option>
+      </select>
+    </div>
+    <div class="w3-container w3-cell">
+      <p>Period From</p>
+      <input class="w3-input w3-border" name="periodFrom" type="date" value="{{ options['df'] }}" />
+    </div>
+    <div class="w3-container w3-cell">
+      <p>Period To</p>
+      <input class="w3-input w3-border" name="periodTo" type="date" value="{{ options['dt'] }}" />
+    </div>
+    <div class="w3-container w3-cell">
+      <p>Items Per Page</p>
+      <select class="w3-input w3-select" name="limit">
+        {% for i in [10, 20, 50, 100, 200, 'all'] %}
+          {% if options['limit'] == i %}
+            <option value="{{ i }}" selected >{{ i }}</option>
+          {% else %}
+            <option value="{{ i }}" >{{ i }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="w3-container w3-cell w3-cell-bottom">
+      <input class="w3-btn w3-blue" type="submit" value="Search" />
+    </div>
+  </div>
+</form>
+
+<table class="w3-table-all">
+  <thead>
+    <tr class="w3-blue">
+      <th>ID</th>
+      <th>Job Callback</th>
+      <th>Channel</th>
+      <th>Language</th>
+      <th>Status</th>
+      <th>Created At</th>
+      <th>Expires At</th>
+      <th class="w3-right-align">Actions</th>
+    </tr>
+  </thead>
+  {% for job in jobs %}
+  <tr>
+    <td class="w3-text-blue"><a href="{{url_for('jobs.item', jobid=job.get('_id'))}}">{{job.get("_id")}}</a></td>
+    <td>{{job.get("job_name")}}</td>
+    <td>{{job.get("channel")}}</td>
+    <td>{{job.get("lang")}}</td>
+    <td>{{job.get("status")}}</td>
+    <td>{{job.get("createdAt")}}</td>
+    <td>{{job.get("expireAt")}}</td>
+    <td class="w3-right-align">
+      <div class="w3-cell-row">
+        <div class="w3-cell">
+          <form onSubmit="return confirm('Are you sure you wish to requeue job?');" action="{{ url_for('jobs.requeue', jobid=job.get('_id')) }}" method="post"><input type="submit" class="w3-blue" value="requeue" /></form>
+        </div>
+        <div class="w3-cell">
+          <form onSubmit="return confirm('Are you sure you wish to delete job?');" action="{{ url_for('jobs.remove', jobid=job.get('_id')) }}" method="post"><input type="submit" class="w3-red" value="remove" /></form>
+        </div>
+      </div>
+      <a></a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+<br>
+<form method="post" class="w3-margin-top">
+  <input type="hidden" name="searchText" value="{{ options['text'] }}" />
+  <input type="hidden" name="status" value="{{ options['status'] }}" />
+  <input type="hidden" name="language" value="{{ options['lang'] }}" />
+  <input type="hidden" name="periodFrom" value="{{ options['df'] }}" />
+  <input type="hidden" name="periodTo" value="{{ options['dt'] }}" />
+  <input type="hidden" name="limit" value="{{ options['limit'] }}" />
+  <input type="hidden" name="currentPage" value="{{ options['page'] }}" />
+  <input type="hidden" name="numOfPages" value="{{ options['numOfPages'] }}" />
+
+  <div class="w3-center">
+    <div class="w3-bar">
+      {% if options['page'] > 1 %}
+      <input class="w3-button" type="submit" name="page" value="{{ '<<' }}" />
+      <input class="w3-button" type="submit" name="page" value="{{ '<' }}" /> {% for i in options['paging']['left'] %}
+      <input class="w3-button" type="submit" name="page" value="{{ i }}" /> {% endfor %} {% endif %}
+
+      <input class="w3-button w3-blue" type="submit" name="page" value="{{ options['page'] }}" /> {% if options['page']
+      < options[ 'numOfPages'] %} {% for i in options[ 'paging'][ 'right'] %} <input class="w3-button" type="submit" name="page" value="{{ i }}" /> {% endfor %}
+      <input class="w3-button" type="submit" name="page" value="{{ '>' }}" />
+      <input class="w3-button" type="submit" name="page" value="{{ '>>' }}" /> {% endif %}
+    </div>
+  </div>
+</form>
+{% endblock %}

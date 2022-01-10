@@ -46,6 +46,8 @@ function parseArgs(): any {
   worker.addArgument(['-m', '--modules'], { dest: 'modules', action: "append", type: String, default: [], help: 'additional python module paths' });
   worker.addArgument(['-b', '--heartbeat'], { dest: 'heartBeat', type: 'int', default: 1, help: 'worker heart beat in seconds (default: 1)' });
   worker.addArgument(['-v', '--verbose'], { dest: 'verbose', action: 'storeTrue', type: Boolean, default: false, help: 'worker verbosity' });
+  worker.addArgument('--verbosity', { dest: 'verbosity', type: String, default: 'error', help: 'logger verbosity, options are [error, completed, progress] (default: error)' });
+  worker.addArgument('--logger', { dest: 'logger', type: String, default: null, help: 'logger callback function (default: null)' });
 
 
   const queue = subparsers.addParser('queue', { description: 'Schedule a job into the job queue' });
@@ -105,7 +107,7 @@ async function runWorker(args: any) {
     }
     process.env.NODE_PATH = process.env.NODE_PATH ? `${process.env.NODE_PATH}:${process.cwd()}` : process.cwd()
     require('module').Module._initPaths();
-    const worker = new Worker(queues, {heartBeat: args.heartBeat, verbose: args.verbose})
+    const worker = new Worker(queues, {heartBeat: args.heartBeat, verbose: args.verbose, verbosity: args.verbosity, logger: args.logger})
     if (!channels || channels.length === 0) {
       console.log(`**Started worker with heart beat of ${args.heartBeat} second(s)`)
     } else {

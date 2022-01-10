@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 from bson.objectid import ObjectId
+import platform,socket,re,uuid,psutil,logging
 
 
 regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -41,3 +42,20 @@ def toOid(id):
     pass
   
   return oid
+
+def getSystemInfo():
+  try:
+    info={}
+    info['platform']=platform.system()
+    info['platform-release']=platform.release()
+    info['platform-version']=platform.version()
+    info['architecture']=platform.machine()
+    info['hostname']=socket.gethostname()
+    info['ip-address']=socket.gethostbyname(socket.gethostname())
+    info['mac-address']=':'.join(re.findall('..', '%012x' % uuid.getnode()))
+    info['processor']=platform.processor()
+    info['ram']=str(round(psutil.virtual_memory().total / (1024.0 **3)))+" GB"
+    return info
+  except Exception as e:
+    logging.exception(e)
+    return {}
