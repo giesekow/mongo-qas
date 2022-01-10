@@ -1,4 +1,0 @@
-pymongo
-Flask
-Flask-HTTPAuth
-Werkzeug
