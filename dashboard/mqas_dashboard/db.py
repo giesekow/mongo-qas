@@ -28,7 +28,7 @@ class DB:
       self.collection = connection
 
   def get_workers(self):
-    items = self.collection.find({"is_worker": True})
+    items = self.collection.find({"is_worker": True}).sort("createdAt", DESCENDING)
     return list(items)
 
   def get_worker(self, worker_id):
@@ -44,7 +44,7 @@ class DB:
       limit = int(limit)
 
     count = self.collection.count_documents(query)
-    items = self.collection.find(query).skip(skip).limit(limit)
+    items = self.collection.find(query).sort("createdAt", DESCENDING).sort("updatedAt", DESCENDING).skip(skip).limit(limit)
     return list(items), count
 
   def get_job(self, job_id):
@@ -71,7 +71,6 @@ def get_variables():
   db_name = os.environ.get("DB_NAME", "jobs")
   col_name = os.environ.get("DB_COL_NAME", "jobs")
   return dict(connection=connection, db_name=db_name, col_name=col_name)
-
 
 def get_db():
   if 'db' not in g:

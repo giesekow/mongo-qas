@@ -138,20 +138,22 @@ class Worker:
         }
 
         coll = self.queues[0].collection
-
-        if self.worker_id is None:
-          data["createdAt"] = c_dt
-          data["updatedAt"] = c_dt
-          res = coll.insert_one(data)
-          self.worker_id = res.inserted_id
-        else:
-          data["updatedAt"] = c_dt
-          res = coll.find_one_and_update({"_id": ObjectId(self.worker_id)}, {"$set": data})
-          if res is None:
+        try:  
+          if self.worker_id is None:
             data["createdAt"] = c_dt
             data["updatedAt"] = c_dt
             res = coll.insert_one(data)
             self.worker_id = res.inserted_id
+          else:
+            data["updatedAt"] = c_dt
+            res = coll.find_one_and_update({"_id": ObjectId(self.worker_id)}, {"$set": data}, projection={"_id": True})
+            if res is None:
+              data["createdAt"] = c_dt
+              data["updatedAt"] = c_dt
+              res = coll.insert_one(data)
+              self.worker_id = res.inserted_id
+        except Exception as e:
+          print(f"Worker status update error: {e}")
           
   def stop(self):
     self._running = False
@@ -195,9 +197,8 @@ class Worker:
         self.jobs_failed += 1
         self.last_error_message = output["error"] if isinstance(output["error"], dict) else dict(message=output["error"], trace="")
         self.last_error_message["errorAt"] = datetime.utcnow()
-        self.last_error_message["callback"] = callback
-        self.last_error_message["args"] = args
-        self.last_error_message["kwargs"] = kwargs
+        self.last_error_message["callback"] = str(callback)
+        self.last_error_message["jobId"] = job.id
   
   def _run_job(self, job: Type[Job]):
     payload = job.payload
@@ -234,8 +235,7 @@ class Worker:
       self.last_error_message = dict(message=f"Error: {ex}", trace=str(errtrace))
       self.last_error_message["errorAt"] = datetime.utcnow()
       self.last_error_message["callback"] = callback
-      self.last_error_message["args"] = args
-      self.last_error_message["kwargs"] = kwargs
+      self.last_error_message["jobId"] = job.id
       print(f"Error: {ex}")
 
   def _run(self):

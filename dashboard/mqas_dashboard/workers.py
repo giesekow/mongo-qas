@@ -40,12 +40,11 @@ def item(workerid):
         last_error = dict(message=last_error, trace="")
 
       errors = [
+        dict(text="Job Id", value=last_error.get("jobId"), cssclass="w3-text-red"),
         dict(text="Message", value=last_error.get("message"), cssclass="w3-text-red"),
         dict(text="Occurred At", value=last_error.get("errorAt"), cssclass="w3-text-red"),
         dict(text="Trace", value=last_error.get("trace"), cssclass="w3-text-red"),
         dict(text="Job", value=last_error.get("callback"), cssclass="w3-text-red"),
-        dict(text="Job Args", value=last_error.get("args"), cssclass="w3-text-red"),
-        dict(text="Job Kwargs", value=last_error.get("kwargs"), cssclass="w3-text-red"),
       ]
 
     return render_template('workers/item.html', worker=worker, attributes=attrs, errors=errors, has_errors=len(errors) > 0)
