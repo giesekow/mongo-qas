@@ -143,6 +143,7 @@ def item(jobid):
       dict(text="Status", value=job.get("status")),
       dict(text="Channel", value=job.get("channel")),
       dict(text="Language", value=job.get("lang")),
+      dict(text="Depends On", value=job.get("depends_on", [])),
       dict(text="Created At", value=job.get("createdAt")),
       dict(text="Expires At", value=job.get("expireAt")),
     ]

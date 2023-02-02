@@ -59,7 +59,7 @@ class DB:
       if int(ttl) > 0:
         expireAt = datetime.utcnow() + timedelta(seconds=int(ttl))
 
-    res = self.collection.update_one({"is_worker": {"$ne": True}, "_id": ObjectId(job_id)}, {"$set": {"done": False, "error": False, "inProgress": False, "errorMessage": None, "result": None, "expireAt": expireAt}})
+    res = self.collection.update_one({"is_worker": {"$ne": True}, "_id": ObjectId(job_id)}, {"$set": {"done": False, "error": False, "inProgress": False, "errorMessage": None, "result": None, "expireAt": expireAt, "attempts": 0}})
     return res
 
   def remove_job(self, job_id):

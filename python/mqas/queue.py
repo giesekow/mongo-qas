@@ -9,7 +9,7 @@ from .job import Job
 from .misc import parse_time_to_seconds, toOid
 
 class Queue:
-  def __init__(self, connection: Union[str, Type[Collection], Type[Database], Type[MongoClient]], consumerId: str = "default-customer-id", lang: str = "python", channel: str = "default", priority: int = 0, job_timeout: Union[str, int, None]='1h', result_ttl: Union[str,int,None]=3600, ttl: Union[str,int,None]=None, failure_ttl: Union[str,int]='1w', max_attempts: int=1, db_name: Optional[str]="jobs", col_name: Optional[str]="jobs") -> None:
+  def __init__(self, connection: Union[str, Type[Collection], Type[Database], Type[MongoClient]], consumerId: str = "default-customer-id", lang: str = "python", channel: str = "default", priority: int = 0, job_timeout: Union[str, int, None]='1h', result_ttl: Union[str,int,None]=3600*24, ttl: Union[str,int,None]=None, failure_ttl: Union[str,int]='1w', max_attempts: int=1, db_name: Optional[str]="jobs", col_name: Optional[str]="jobs") -> None:
     
     if isinstance(connection, MongoClient):
       db = connection[db_name]

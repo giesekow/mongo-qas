@@ -13,7 +13,10 @@
   <tr>
     <td>{{att.get("text")}}</a>
     </td>
-    <td class="{{att.get('cssclass')}}">{{att.get("value")}}</td>
+    <td class="{{att.get('cssclass')}}">
+      {% if att.get("text") == "Depends On" and att.get("value") %} {% for val in att.get("value") %}
+      <a href="{{url_for('jobs.item', jobid=val)}}">{{val}}</a>&nbsp; &nbsp;{% endfor %} {% else %} {{att.get("value")}} {% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>

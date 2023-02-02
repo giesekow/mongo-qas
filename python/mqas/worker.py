@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+import tempfile
 from bson.objectid import ObjectId
 from .queue import Queue
 from .job import Job
@@ -39,12 +39,10 @@ class WorkerThread(threading.Thread):
     if modulePaths is None:
       modulePaths = []
 
-    data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),]}
-    result = subprocess.run([executable, "-c", executionCode], stdout=subprocess.PIPE, input=str.encode(json.dumps(data, default=json_util.default)))
-    out = result.stdout.decode().split("\n")
-    if len(out) > 0:
-      output = json.loads(out[-1], object_hook=json_util.object_hook)
-      self.output = output
+    with tempfile.NamedTemporaryFile(delete=True, suffix=".json") as tmp_file:
+      data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file.name}
+      subprocess.run([executable, "-c", executionCode], input=str.encode(json.dumps(data, default=json_util.default)))
+      self.output = json.load(tmp_file)
   
   def get_output(self):
     return self.output
@@ -137,6 +135,11 @@ class Worker:
           "is_worker": True
         }
 
+        if not self.thread is None:
+          c_job = self.thread.get_job()
+          if not c_job is None:
+            data["current_job_id"] = c_job.id
+
         coll = self.queues[0].collection
         try:  
           if self.worker_id is None:
@@ -184,15 +187,13 @@ class Worker:
   def _on_output(self, job, output):
     payload = job.payload
     callback = payload.get("function_name")
-    args = payload.get("args", [])
-    kwargs = payload.get("kwargs", {})
 
     if not output is None:
       if "result" in output:
         job.complete(output["result"])
         self.jobs_completed += 1
       if "error" in output:
-        print(output["error"])
+        print(output["error"], flush=True)
         job.error(output["error"])
         self.jobs_failed += 1
         self.last_error_message = output["error"] if isinstance(output["error"], dict) else dict(message=output["error"], trace="")
