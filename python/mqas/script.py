@@ -44,6 +44,7 @@ def parse_args(cmd_args=None):
   worker.add_argument('-b', '--heartbeat', dest='heartbeat', type=int, default=1,  help='worker heart beat in seconds (default: 1)')
   worker.add_argument('--logger', dest='logger', type=str, default=None,  help='logger callback function (default: None)')
   worker.add_argument('--log-file', dest='log_file', type=str, default=None,  help='path to log file (default: None)')
+  worker.add_argument('--no-sub-process', dest='no_sub_process', action='store_true', help='run job with exec command instead of the default subprocess command')
   worker.add_argument('--verbosity', dest='verbosity', type=str, default="error",  help='logger verbosity, options are [error, completed, progress] (default: error)')
   worker.add_argument('-e', '--executable', dest='executables', action=UpdateAction, type=dict_load, default={},  help='python executable paths for running job based on channels.')
 
@@ -119,8 +120,9 @@ def run_worker(args):
       sys.path.append(os.path.abspath(module))
 
     modulePaths = [os.path.abspath(module) for module in args.modules]
-
-    worker = Worker(queues, heart_beat=args.heartbeat, logger=args.logger, verbosity=args.verbosity, executables=args.executables, logFile=args.log_file, modulePaths=modulePaths)
+    
+    as_subprocess = not args.no_sub_process
+    worker = Worker(queues, heart_beat=args.heartbeat, logger=args.logger, verbosity=args.verbosity, executables=args.executables, logFile=args.log_file, modulePaths=modulePaths, as_subprocess=as_subprocess)
     if (channels is None) or len(channels) == 0:
       print(f"**Started worker with heart beat of {args.heartbeat} second(s)", flush=True)
     else:

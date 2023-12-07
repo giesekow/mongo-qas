@@ -3,7 +3,7 @@ import tempfile
 from bson.objectid import ObjectId
 from .queue import Queue
 from .job import Job
-from .utils import executionCode
+from .utils import executionCodeExec, executionCodeSubProcess
 from typing import Dict, Type, Union, Tuple, Callable
 from time import sleep
 import importlib
@@ -14,7 +14,7 @@ from bson import json_util
 from .misc import getSystemInfo
 
 class WorkerThread(threading.Thread):
-  def __init__(self, function_name, executable=None, args=[], kwargs={}, stdout=None, modulePaths=[], job=None):
+  def __init__(self, function_name, executable=None, args=[], kwargs={}, stdout=None, modulePaths=[], job=None, as_subprocess=True):
     threading.Thread.__init__(self)
     self.function_name=function_name
     self.executable=executable
@@ -24,6 +24,7 @@ class WorkerThread(threading.Thread):
     self.modulePaths=modulePaths
     self.job=job
     self.output=None
+    self.as_subprocess = as_subprocess
 
   def run(self):
     function_name=self.function_name
@@ -41,8 +42,12 @@ class WorkerThread(threading.Thread):
 
     with tempfile.NamedTemporaryFile(delete=True, suffix=".json") as tmp_file:
       data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file.name}
-      #subprocess.run([executable, "-c", executionCodeOld], input=str.encode(json.dumps(data, default=json_util.default)))
-      exec(executionCode, {"payload": data})
+
+      if self.as_subprocess:
+        subprocess.run([executable, "-c", executionCodeSubProcess], input=str.encode(json.dumps(data, default=json_util.default)))
+      else:
+        exec(executionCodeExec, {"payload": data})
+
       self.output = json.load(tmp_file)
   
   def get_output(self):
@@ -53,7 +58,7 @@ class WorkerThread(threading.Thread):
 
 class Worker:
 
-  def __init__(self, queues: Union[Tuple[Queue,...], Type[Queue]], channel: Union[Tuple[str,...], str]=None, heart_beat: int = 1, verbosity: str = "error", logger: Union[str, Callable] = None, executables: Dict = None, logFile: str = None, modulePaths=[]) -> None:
+  def __init__(self, queues: Union[Tuple[Queue,...], Type[Queue]], channel: Union[Tuple[str,...], str]=None, heart_beat: int = 1, verbosity: str = "error", logger: Union[str, Callable] = None, executables: Dict = None, logFile: str = None, modulePaths=[], as_subprocess=True) -> None:
     
     if isinstance(queues, tuple) or isinstance(queues, list):
       self.queues = queues
@@ -70,6 +75,7 @@ class Worker:
     self._working = False
     self._heart_beat = heart_beat
     self._running = False
+    self.as_subprocess = as_subprocess
 
     self._verbosity = verbosity
     self.setLogger(logger)
@@ -223,7 +229,7 @@ class Worker:
             if channel in self.executables:
               executable = self.executables[channel]
 
-          self.thread = WorkerThread(callback, args=args, kwargs=kwargs, executable=executable, stdout=self.logFile, modulePaths=self.modulePaths, job=job)
+          self.thread = WorkerThread(callback, args=args, kwargs=kwargs, executable=executable, stdout=self.logFile, modulePaths=self.modulePaths, job=job, as_subprocess=self.as_subprocess)
           self.thread.start()
 
         else:

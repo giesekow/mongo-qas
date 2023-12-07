@@ -1,4 +1,4 @@
-executionCode = """
+executionCodeExec = """
 import sys, json, os, importlib, traceback
 from bson import json_util
 
@@ -46,7 +46,7 @@ except Exception as ex:
 
 """
 
-executionCodeOld = """
+executionCodeSubProcess = """
 import sys, json, os, importlib, traceback
 from bson import json_util
 
