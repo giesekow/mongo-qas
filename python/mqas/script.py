@@ -27,7 +27,7 @@ def param_parser(v):
   d = dict_load(d)
   return d.get("value")
 
-def parse_args():
+def parse_args(cmd_args=None):
   import argparse
   parser = argparse.ArgumentParser(description='Mongo Queuing and Scheduling Library', add_help=True)
   subparsers = parser.add_subparsers(dest='action')
@@ -75,12 +75,12 @@ def parse_args():
   initialize.add_argument('--colname', dest='col_name', type=str, default="jobs",  help='mongodb collection name (default: jobs)')
 
 
-  args = parser.parse_args()
+  args = parser.parse_args() if cmd_args is None else parser.parse_args(cmd_args)
 
   return args
 
-def main():
-  args = parse_args()
+def main(cmd_args=None):
+  args = parse_args(cmd_args=cmd_args)
   action = args.action
   
   if str(action).lower() == "worker":

@@ -41,7 +41,8 @@ class WorkerThread(threading.Thread):
 
     with tempfile.NamedTemporaryFile(delete=True, suffix=".json") as tmp_file:
       data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file.name}
-      subprocess.run([executable, "-c", executionCode], input=str.encode(json.dumps(data, default=json_util.default)))
+      #subprocess.run([executable, "-c", executionCodeOld], input=str.encode(json.dumps(data, default=json_util.default)))
+      exec(executionCode, {"payload": data})
       self.output = json.load(tmp_file)
   
   def get_output(self):
