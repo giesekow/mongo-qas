@@ -40,15 +40,19 @@ class WorkerThread(threading.Thread):
     if modulePaths is None:
       modulePaths = []
 
-    with tempfile.NamedTemporaryFile(delete=True, suffix=".json") as tmp_file:
-      data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file.name}
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      tmp_file_name = os.path.join(tmp_dir, "job_results.json")
+
+      data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file_name}
 
       if self.as_subprocess:
         subprocess.run([executable, "-c", executionCodeSubProcess], input=str.encode(json.dumps(data, default=json_util.default)))
       else:
         exec(executionCodeExec, {"payload": data})
 
-      self.output = json.load(tmp_file)
+      if os.path.exists(tmp_file_name):
+        with open(tmp_file_name, 'r') as tmp_file:
+          self.output = json.load(tmp_file)
   
   def get_output(self):
     return self.output
