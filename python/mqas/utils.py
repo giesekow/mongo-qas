@@ -1,7 +1,21 @@
-executionCodeExec = """
+
+def executionCodeExec(job_id, worker_id, conn_info):
+  code = f"""
 import sys, json, os, importlib, traceback
 from bson import json_util
 
+try:
+  from mqas import worker_utils
+  worker_utils.set_value("__job_id", "{job_id}")
+  worker_utils.set_value("__worker_id", "{worker_id}")
+  worker_utils.set_value("__db_conn", "{conn_info.get('db_conn')}")
+  worker_utils.set_value("__db_name", "{conn_info.get('db_name')}")
+  worker_utils.set_value("__db_coll", "{conn_info.get('db_coll')}")
+except:
+  pass
+
+  """
+  code += """
 def write_output(data, filename):
   if not filename is None:
     with open(filename, "w") as json_file:
@@ -44,12 +58,26 @@ except Exception as ex:
   data = {"error": {"trace": str(errtrace), "message": err}}
   write_output(data, output_file)
 
-"""
+  """
+  return code
 
-executionCodeSubProcess = """
+def executionCodeSubProcess(job_id, worker_id, conn_info):
+  code = f"""
 import sys, json, os, importlib, traceback
 from bson import json_util
 
+try:
+  from mqas import worker_utils
+  worker_utils.set_value("__job_id", "{job_id}")
+  worker_utils.set_value("__worker_id", "{worker_id}")
+  worker_utils.set_value("__db_conn", "{conn_info.get('db_conn')}")
+  worker_utils.set_value("__db_name", "{conn_info.get('db_name')}")
+  worker_utils.set_value("__db_coll", "{conn_info.get('db_coll')}")
+except:
+  pass
+
+  """
+  code += """
 def write_output(data, filename):
   if not filename is None:
     with open(filename, "w") as json_file:
@@ -93,4 +121,5 @@ except Exception as ex:
   data = {"error": {"trace": str(errtrace), "message": err}}
   write_output(data, output_file)
 
-"""
+  """
+  return code

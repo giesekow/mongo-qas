@@ -97,7 +97,7 @@ def run_worker(args):
   client = MongoClient(args.db_conn)
   queues = ()
   channels = args.channels
-  kwargs = dict(db_name=args.db_name, col_name=args.col_name)
+  kwargs = dict(db_name=args.db_name, col_name=args.col_name, db_conn=args.db_conn)
 
   if not args.consumerId is None:
     kwargs['consumerId'] = args.consumerId
@@ -137,7 +137,7 @@ def run_queue(args):
   import os, sys
   client = MongoClient(args.db_conn)
 
-  kwargs = dict(db_name=args.db_name, col_name=args.col_name)
+  kwargs = dict(db_name=args.db_name, col_name=args.col_name, db_conn=args.db_conn)
   if not args.consumerId is None:
     kwargs['consumerId'] = args.consumerId
     

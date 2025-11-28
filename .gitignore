@@ -12,5 +12,5 @@ node/test
 dashboard/build
 dashboard/dist
 dashboard/*.egg-info
-
+venv
 test

@@ -5,7 +5,7 @@ from .misc import toOid
 import importlib
 
 class Job:
-  def __init__(self, id, data, collection: Type[Collection], **kwargs):
+  def __init__(self, id, data, collection: Type[Collection], connection_info=None, **kwargs):
     self.id = toOid(id)
     self.coll = collection
     self.payload = data
@@ -13,7 +13,9 @@ class Job:
     self.result = None
     self.logger = None
     self.channel = None
+    self.worker_id = None
     self.verbosity = "error"
+    self.__connection_info = connection_info
 
     if "logger" in kwargs:
       self.setLogger(kwargs["logger"])
@@ -129,3 +131,9 @@ class Job:
   def release(self):
     self.coll.update_one({"_id": self.id}, {"$set": {"inProgress": False, "error": False, "done": False, "releasedAt": datetime.utcnow(), "attempts": 0}})
     return True
+  
+  def set_connection_info(self, info):
+    self.__connection_info = info
+
+  def get_connection_info(self):
+    return self.__connection_info

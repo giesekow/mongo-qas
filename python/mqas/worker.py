@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import tempfile
 from bson.objectid import ObjectId
 from .queue import Queue
@@ -46,9 +46,19 @@ class WorkerThread(threading.Thread):
       data = {"function_name": function_name, "args": args, "kwargs": kwargs, "stdout": stdout, "modules": modulePaths + [os.getcwd(),], "output": tmp_file_name}
 
       if self.as_subprocess:
-        subprocess.run([executable, "-c", executionCodeSubProcess], input=str.encode(json.dumps(data, default=json_util.default)))
+        _code = executionCodeSubProcess(
+          job_id=str(self.job.id),
+          worker_id=str(self.job.worker_id),
+          conn_info=self.job.get_connection_info()
+        )
+        subprocess.run([executable, "-c", _code], input=str.encode(json.dumps(data, default=json_util.default)))
       else:
-        exec(executionCodeExec, {"payload": data})
+        _code = executionCodeExec(
+          job_id=str(self.job.id),
+          worker_id=str(self.job.worker_id),
+          conn_info=self.job.get_connection_info()
+        )
+        exec(_code, {"payload": data})
 
       if os.path.exists(tmp_file_name):
         with open(tmp_file_name, 'r') as tmp_file:
@@ -97,7 +107,7 @@ class Worker:
 
     self.worker_info = getSystemInfo()
 
-    self.worker_id = None
+    self.worker_id = ObjectId()
     self.status_update_frequency = 10
     self.current_status_update_timeout = 10
     self.jobs_completed = 0
@@ -134,10 +144,10 @@ class Worker:
     if self.current_status_update_timeout >= self.status_update_frequency:
       self.current_status_update_timeout = 0
       if len(self.queues) > 0:
-        c_dt = datetime.utcnow()
+        c_dt = datetime.now(tz=timezone.utc)
         data = {
           "status": "working" if self._working else "waiting",
-          "expireAt": datetime.utcnow() + timedelta(seconds=self._heart_beat + 10 + self.status_update_frequency),
+          "expireAt": datetime.now(tz=timezone.utc) + timedelta(seconds=self._heart_beat + 10 + self.status_update_frequency),
           "queues": [q.channel for q in self.queues],
           "info": self.worker_info,
           "jobs_completed": self.jobs_completed,
@@ -232,7 +242,7 @@ class Worker:
           if not channel is None:
             if channel in self.executables:
               executable = self.executables[channel]
-
+          job.worker_id = self.worker_id
           self.thread = WorkerThread(callback, args=args, kwargs=kwargs, executable=executable, stdout=self.logFile, modulePaths=self.modulePaths, job=job, as_subprocess=self.as_subprocess)
           self.thread.start()
 
