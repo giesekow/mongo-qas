@@ -119,7 +119,7 @@ class MemoryLocker:
 
         lock_id = self.__request_scheduling(worker_id)
 
-        if not lock_id:
+        if lock_id is None:
             return False
         
         avail_mem = psutil.virtual_memory().available / (1024**2) # MB
@@ -184,7 +184,7 @@ class MemoryLocker:
         self.__updater_thread.start()
 
     def __wait(self):
-        if not self.coll:
+        if self.coll is None:
             return
         
         while not self.__reserve_memory():
