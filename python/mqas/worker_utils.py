@@ -47,6 +47,10 @@ def get_worker_id():
     worker_id = get_value("__worker_id")
     return worker_id
 
+def get_device_id():
+    worker_id = get_value("__device_id")
+    return worker_id
+
 def get_jobs_db():
     DB_CLIENT = get_value("__db_client")
     DB_OBJ = get_value("__db_obj")
@@ -90,11 +94,12 @@ class MemoryLocker:
     def release(self):
         self.__stop()
 
-    def __request_scheduling(self, worker_id):
+    def __request_scheduling(self, worker_id, device_id):
         expire_at = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=5)
         result = self.coll.find_one_and_update(
             {
                 "is_reservation_lock": True,
+                "device_id": device_id,
                 "is_locked": False
             },
             {
@@ -102,6 +107,7 @@ class MemoryLocker:
                     "is_reservation_lock": True,
                     "is_locked": True,
                     "worker_id": worker_id,
+                    "device_id": device_id,
                     "expireAt": expire_at
                 }
             },
@@ -116,8 +122,9 @@ class MemoryLocker:
 
     def __reserve_memory(self):
         worker_id = get_worker_id()
+        device_id = get_device_id()
 
-        lock_id = self.__request_scheduling(worker_id)
+        lock_id = self.__request_scheduling(worker_id, device_id)
 
         if lock_id is None:
             return False
@@ -128,12 +135,13 @@ class MemoryLocker:
         # Get reserved memory
         coll = self.coll
         
-        workers = coll.find({ "is_worker": True }, ["_id"])
+        workers = coll.find({ "is_worker": True, "device_id": device_id }, ["_id"])
         worker_ids = list(w.get("_id") for w in list(workers) if str(w.get("_id")) != worker_id)
 
         query = {
             "is_reservation": True,
-            "worker_id": { "$in": worker_ids }
+            "worker_id": { "$in": worker_ids },
+            "device_id": device_id
         }
 
         res = coll.find(query, ["ram"])
@@ -148,6 +156,7 @@ class MemoryLocker:
             else:
                 data = {
                     "is_reservation": True,
+                    "device_id": device_id,
                     "worker_id": make_oid(worker_id),
                     "job_id": make_oid(job_id),
                     "ram": self.memory,
@@ -212,5 +221,5 @@ class MemoryLocker:
             coll.delete_one({"_id": make_oid(self.reservation_id)})
             self.reservation_id = None
         
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, *arg, **kwargs):
         return self.__stop()

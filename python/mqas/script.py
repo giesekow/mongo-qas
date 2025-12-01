@@ -47,6 +47,7 @@ def parse_args(cmd_args=None):
   worker.add_argument('--no-sub-process', dest='no_sub_process', action='store_true', help='run job with exec command instead of the default subprocess command')
   worker.add_argument('--verbosity', dest='verbosity', type=str, default="error",  help='logger verbosity, options are [error, completed, progress] (default: error)')
   worker.add_argument('-e', '--executable', dest='executables', action=UpdateAction, type=dict_load, default={},  help='python executable paths for running job based on channels.')
+  worker.add_argument('--device-id', dest='deviceId', type=str, default=None,  help='worker device id (default: computed with hardware information)')
 
   queue = subparsers.add_parser('queue', description='Schedule a job into the job queue')
   queue.add_argument('function_name', metavar='function_name', type=str, help='the full name of the entry point function')
@@ -122,7 +123,7 @@ def run_worker(args):
     modulePaths = [os.path.abspath(module) for module in args.modules]
     
     as_subprocess = not args.no_sub_process
-    worker = Worker(queues, heart_beat=args.heartbeat, logger=args.logger, verbosity=args.verbosity, executables=args.executables, logFile=args.log_file, modulePaths=modulePaths, as_subprocess=as_subprocess)
+    worker = Worker(queues, heart_beat=args.heartbeat, logger=args.logger, verbosity=args.verbosity, executables=args.executables, logFile=args.log_file, modulePaths=modulePaths, as_subprocess=as_subprocess, device_id=args.deviceId)
     if (channels is None) or len(channels) == 0:
       print(f"**Started worker with heart beat of {args.heartbeat} second(s)", flush=True)
     else:

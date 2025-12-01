@@ -11,7 +11,7 @@ import subprocess
 import threading
 import sys, json, os, traceback
 from bson import json_util
-from .misc import getSystemInfo
+from .misc import getSystemInfo, get_device_uid
 
 class WorkerThread(threading.Thread):
   def __init__(self, function_name, executable=None, args=[], kwargs={}, stdout=None, modulePaths=[], job=None, as_subprocess=True):
@@ -49,14 +49,16 @@ class WorkerThread(threading.Thread):
         _code = executionCodeSubProcess(
           job_id=str(self.job.id),
           worker_id=str(self.job.worker_id),
-          conn_info=self.job.get_connection_info()
+          conn_info=self.job.get_connection_info(),
+          device_id=self.job.device_id
         )
         subprocess.run([executable, "-c", _code], input=str.encode(json.dumps(data, default=json_util.default)))
       else:
         _code = executionCodeExec(
           job_id=str(self.job.id),
           worker_id=str(self.job.worker_id),
-          conn_info=self.job.get_connection_info()
+          conn_info=self.job.get_connection_info(),
+          device_id=self.job.device_id
         )
         exec(_code, {"payload": data})
 
@@ -72,7 +74,7 @@ class WorkerThread(threading.Thread):
 
 class Worker:
 
-  def __init__(self, queues: Union[Tuple[Queue,...], Type[Queue]], channel: Union[Tuple[str,...], str]=None, heart_beat: int = 1, verbosity: str = "error", logger: Union[str, Callable] = None, executables: Dict = None, logFile: str = None, modulePaths=[], as_subprocess=True) -> None:
+  def __init__(self, queues: Union[Tuple[Queue,...], Type[Queue]], channel: Union[Tuple[str,...], str]=None, heart_beat: int = 1, verbosity: str = "error", logger: Union[str, Callable] = None, executables: Dict = None, logFile: str = None, modulePaths=[], as_subprocess=True, device_id=None) -> None:
     
     if isinstance(queues, tuple) or isinstance(queues, list):
       self.queues = queues
@@ -115,6 +117,9 @@ class Worker:
     self.last_error_message = None
 
     self.thread = None
+
+    self.device_id = device_id or get_device_uid()
+    self.worker_info.update({"device-id": self.device_id})
     
   def setLogger(self, logger: Union[str, Callable]):
     if callable(logger):
@@ -150,6 +155,7 @@ class Worker:
           "expireAt": datetime.now(tz=timezone.utc) + timedelta(seconds=self._heart_beat + 10 + self.status_update_frequency),
           "queues": [q.channel for q in self.queues],
           "info": self.worker_info,
+          "device_id": self.device_id,
           "jobs_completed": self.jobs_completed,
           "jobs_failed": self.jobs_failed,
           "last_error_message": self.last_error_message,
@@ -243,6 +249,7 @@ class Worker:
             if channel in self.executables:
               executable = self.executables[channel]
           job.worker_id = self.worker_id
+          job.device_id = self.device_id
           self.thread = WorkerThread(callback, args=args, kwargs=kwargs, executable=executable, stdout=self.logFile, modulePaths=self.modulePaths, job=job, as_subprocess=self.as_subprocess)
           self.thread.start()
 

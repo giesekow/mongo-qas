@@ -1,5 +1,5 @@
 
-def executionCodeExec(job_id, worker_id, conn_info):
+def executionCodeExec(job_id, worker_id, conn_info, device_id):
   code = f"""
 import sys, json, os, importlib, traceback
 from bson import json_util
@@ -11,6 +11,7 @@ try:
   worker_utils.set_value("__db_conn", "{conn_info.get('db_conn')}")
   worker_utils.set_value("__db_name", "{conn_info.get('db_name')}")
   worker_utils.set_value("__db_coll", "{conn_info.get('db_coll')}")
+  worker_utils.set_value("__device_id", "{device_id}")
 except:
   pass
 
@@ -61,7 +62,7 @@ except Exception as ex:
   """
   return code
 
-def executionCodeSubProcess(job_id, worker_id, conn_info):
+def executionCodeSubProcess(job_id, worker_id, conn_info, device_id):
   code = f"""
 import sys, json, os, importlib, traceback
 from bson import json_util
@@ -73,6 +74,7 @@ try:
   worker_utils.set_value("__db_conn", "{conn_info.get('db_conn')}")
   worker_utils.set_value("__db_name", "{conn_info.get('db_name')}")
   worker_utils.set_value("__db_coll", "{conn_info.get('db_coll')}")
+  worker_utils.set_value("__device_id", "{device_id}")
 except:
   pass
 

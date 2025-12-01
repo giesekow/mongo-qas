@@ -14,6 +14,7 @@ class Job:
     self.logger = None
     self.channel = None
     self.worker_id = None
+    self.device_id = None
     self.verbosity = "error"
     self.__connection_info = connection_info
 

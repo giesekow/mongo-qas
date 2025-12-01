@@ -1,7 +1,7 @@
 import re
 from datetime import timedelta
 from bson.objectid import ObjectId
-import platform,socket,re,uuid,psutil,logging
+import platform,socket,re,uuid,psutil,logging,hashlib
 
 
 regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -59,3 +59,26 @@ def getSystemInfo():
   except Exception as e:
     logging.exception(e)
     return {}
+  
+def get_device_uid():
+    data = []
+
+    # MAC address (hardware-based)
+    mac = uuid.getnode()
+    data.append(str(mac))
+
+    # Hostname
+    data.append(socket.gethostname())
+
+    # OS information
+    data.append(platform.system())
+    data.append(platform.node())
+    data.append(platform.release())
+    data.append(platform.version())
+    data.append(platform.machine())
+    data.append(platform.processor())
+
+    raw = "|".join(data)
+
+    # Hash into fixed-length ID
+    return hashlib.sha256(raw.encode()).hexdigest()
